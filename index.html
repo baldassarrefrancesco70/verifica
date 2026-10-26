@@ -41,9 +41,6 @@
   #bar .lbl { color: var(--muted); }
   #bar .code { margin-left: auto; font: 700 .95rem ui-monospace, Menlo, monospace; letter-spacing: .12em; }
   #frame { flex: 1 1 auto; width: 100%; border: 0; background: #fff; }
-  #toast { position: fixed; left: 16px; right: 16px; bottom: max(16px, env(safe-area-inset-bottom));
-    background: var(--warn); color: #fff; border-radius: 10px; padding: 12px 14px; font-size: .95rem;
-    display: none; text-align: center; }
 </style>
 </head>
 <body>
@@ -51,7 +48,6 @@
 <section id="intro">
   <div class="card">
     <h1 id="titolo">Verifica</h1>
-    <p class="note">Durante la verifica questa pagina <strong>registra ogni volta che esci</strong>: se cambi app o scheda, o blocchi lo schermo, il docente vede l'ora e la durata dell'uscita.</p>
     <p class="note">Resta su questa pagina fino all'invio del modulo.</p>
     <div class="code-box"><span>Il tuo codice di sessione</span><strong id="codice">····</strong></div>
     <p class="note" id="nota-codice"></p>
@@ -61,11 +57,9 @@
 </section>
 
 <section id="test">
-  <div id="bar"><span class="dot"></span><span class="lbl">Uscite registrate</span><span class="code" id="codice-bar"></span></div>
+  <div id="bar"><span class="dot"></span><span class="lbl">Verifica in corso</span><span class="code" id="codice-bar"></span></div>
   <iframe id="frame" title="Modulo della verifica" allow="clipboard-write"></iframe>
 </section>
-
-<div id="toast" role="status"></div>
 
 <script>
 /* ============================================================
@@ -174,15 +168,6 @@ const CONFIG = {
   }
   window.addEventListener("online", svuotaCoda);
 
-  // ---------- avviso visibile al rientro ----------
-  let toastTimer = null;
-  function avviso(testo) {
-    const t = $("toast");
-    t.textContent = testo; t.style.display = "block";
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => { t.style.display = "none"; }, 4000);
-  }
-
   // ---------- rilevamento delle uscite ----------
   let attiva = false;
   let uscitaDa = null;
@@ -199,7 +184,6 @@ const CONFIG = {
       uscitaDa = null;
       registra("rientro", { durata: sec, dettaglio: "uscita n. " + nUscite });
       svuotaCoda();
-      avviso("Uscita registrata: " + sec + " s fuori dalla verifica.");
     }
   });
 
