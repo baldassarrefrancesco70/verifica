@@ -90,6 +90,17 @@ const CONFIG = {
       titolo: "Hegel – Verifica",
       form: "1FAIpQLScLcoaLL2n34fslojm8NZf7Jok81gs-Zto5uJlwZ0md9DLGWg",
       entryCodice: "1775616313"
+    },
+    "primaguerra-5": {
+      titolo: "La Prima guerra mondiale – Verifica finale",
+      versioni: [
+        { form: "1FAIpQLScRNgK3veBMkMygpUevxbDj4Ggb-uzBqhoPcD-KScBDZYvhKQ", entryCodice: "777475923" },
+        { form: "1FAIpQLSfH-C5Y95Vz-O5csqbwpTSyv4zgD-G5Pg1Xoh5FhRRaSoz-hQ", entryCodice: "349582273" },
+        { form: "1FAIpQLSf_q9mls8vGjygzO_tUMoZ4qwpPeQublrwICkwiYihaXQltHQ", entryCodice: "1712904796" },
+        { form: "1FAIpQLSdlAjEWUqQaQWW3AxuiGSqli2aY0Ji_GsgA1mijmb7AZtUKJQ", entryCodice: "1613352824" },
+        { form: "1FAIpQLSdHNHC3DVTWV7f6iUZieen8TWVPNAQ1m--L2uj4IoHHYvQ0og", entryCodice: "1974370313" },
+        { form: "1FAIpQLSfbHX_cQeoKTuj8QxcnfmVXYoGbjxucqRk9I3rQKZPFkiPOrg", entryCodice: "948738204" }
+      ]
     }
   }
 };
@@ -132,11 +143,26 @@ const CONFIG = {
   }
   const codice = sessione.codice;
 
+  // ---------- versione (verifiche con più moduli) ----------
+  // Se la verifica ha «versioni», ne sceglie una a caso alla prima apertura e la ricorda,
+  // così ricaricando la pagina lo studente ritrova la stessa versione.
+  let modulo = verifica;
+  if (Array.isArray(verifica.versioni) && verifica.versioni.length) {
+    const nv = verifica.versioni.length;
+    if (!(sessione.versione >= 1 && sessione.versione <= nv)) {
+      const r = new Uint32Array(1);
+      (window.crypto || window.msCrypto).getRandomValues(r);
+      sessione.versione = 1 + (r[0] % nv);
+      store.set(KEY_SESS, sessione);
+    }
+    modulo = verifica.versioni[sessione.versione - 1];
+  }
+
   $("titolo").textContent = verifica.titolo;
   document.title = verifica.titolo;
   $("codice").textContent = codice;
   $("codice-bar").textContent = codice;
-  $("nota-codice").textContent = verifica.entryCodice
+  $("nota-codice").textContent = modulo.entryCodice
     ? "Il codice viene inserito da solo nel modulo: non modificarlo."
     : "Scrivi questo codice nella domanda «Codice di sessione» del modulo.";
 
@@ -205,9 +231,9 @@ const CONFIG = {
   });
 
   function urlModulo() {
-    let u = "https://docs.google.com/forms/d/e/" + encodeURIComponent(verifica.form) + "/viewform?embedded=true";
-    if (verifica.entryCodice) {
-      const id = String(verifica.entryCodice).replace(/^entry\./, "");
+    let u = "https://docs.google.com/forms/d/e/" + encodeURIComponent(modulo.form) + "/viewform?embedded=true";
+    if (modulo.entryCodice) {
+      const id = String(modulo.entryCodice).replace(/^entry\./, "");
       u += "&entry." + encodeURIComponent(id) + "=" + encodeURIComponent(codice);
     }
     return u;
@@ -218,7 +244,8 @@ const CONFIG = {
     $("test").style.display = "flex";
     $("frame").src = urlModulo();
     attiva = true;
-    registra(riapertura && sessione.avviata ? "riapertura" : "avvio");
+    registra(riapertura && sessione.avviata ? "riapertura" : "avvio",
+      sessione.versione ? { dettaglio: "versione V" + sessione.versione } : undefined);
     sessione.avviata = true; store.set(KEY_SESS, sessione);
     svuotaCoda();
   }
